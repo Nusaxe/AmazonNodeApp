@@ -19,7 +19,8 @@ var mysqlconnection = mysql.createConnection({
 
 mysqlconnection.connect((err) => {
     if (!err)
-        console.log('DB Connection Good to go');
+        console.log('DB Connection Good to go'),
+        display();
     else
         console.log('DB Connection in pain, please fix \n Error: ' + JSON.stringify(err, undefined, 2));
 });
@@ -27,19 +28,6 @@ mysqlconnection.connect((err) => {
 app.listen(3300, () => console.log('express server is running at port 3300'));
 
 
-
-
-
-
-//allow user to select a product for purchase 
-app.get('/products/:id', (res, req) => {
-    mysqlconnection.query('SELECT * FROM PRODUCTS WHERE ID = ?', [req.params.id], (err, rows, fields) => {
-        if (!err)
-            console.log(rows);
-        else
-            console.log(err);
-    })
-});
 
 function selectItem() {
 
@@ -49,7 +37,7 @@ function selectItem() {
         inquirer
             .prompt([{
                     name: "choice",
-                    type: "choices",
+                    type: "rawlist",
                     choices: function () {
                         var choiceArray = [];
                         for (var i = 0; i < results.length; i++) {
@@ -60,7 +48,7 @@ function selectItem() {
                     message: "Which Item are you interested in?"
                 },
                 {
-                    name: "Quantity",
+                    name: "quantity",
                     type: "input",
                     message: "How many of the item would you like to buy?"
                 }
@@ -75,10 +63,10 @@ function selectItem() {
                 }
 
 
-                if (chosenItem.stock_quantity < parseInt(answer.quanity)) {
+                if (chosenItem.stock_quantity > parseInt(answer.quanity)) {
 
-                    connection.query(
-                        "UPDATE products  SET ? WHERE ?",
+                    mysqlconnection.query(
+                        "UPDATE stock_quantity SUBTRACT " + answer.quantity,
                         [{
                                 stock_quantity: answer.quanity
                             },
@@ -86,6 +74,7 @@ function selectItem() {
                                 id: chosenItem.id
                             }
                         ],
+                        console.log(stock_quantity),
                         function (error) {
                             if (error) throw err;
                             console.log("There is not enough stock"),
@@ -114,5 +103,3 @@ function display() {
         })
     });
 }
-
-display();
